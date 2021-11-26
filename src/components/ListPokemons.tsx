@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
 // Material ui
-import { Box, Pagination } from "@mui/material";
+import { Box, Grid, Pagination } from "@mui/material";
 // Components
 import { PokemonCard } from "./PokemonCard";
 // Utils
 import { usePokemons } from "hooks/usePokemons";
-import { Pokemon } from "types/Pokemon";
+import { SearchInput } from "SearchInput";
 
 const maxPokemonsPerPage = 10;
 
@@ -14,15 +14,23 @@ export const ListPokemons: React.FC = () => {
   const { pokemons } = usePokemons();
 
   // States
+  const [search, setSearch] = useState("");
   const [favoritePokemons, setFavoritePokemons] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const filteredPokemons = useMemo(() => {
+    const regex = new RegExp(search, "i");
+    return pokemons.filter(
+      (pokemon) => regex.test(pokemon.name) || regex.test(pokemon.national_number)
+    );
+  }, [search, pokemons]);
+
   const paginatedPokemons = useMemo(() => {
-    return pokemons.slice(
+    return filteredPokemons.slice(
       (currentPage - 1) * maxPokemonsPerPage,
       (currentPage - 1) * maxPokemonsPerPage + maxPokemonsPerPage
     );
-  }, [pokemons, currentPage]);
+  }, [filteredPokemons, currentPage]);
 
   const toggleFavorite = (id: string) => {
     const index = favoritePokemons.indexOf(id);
@@ -39,6 +47,12 @@ export const ListPokemons: React.FC = () => {
 
   return (
     <div>
+      <Grid container sx={{ mb: 2 }}>
+        <Grid item xs={12} sm={6}>
+          <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} />
+        </Grid>
+      </Grid>
+
       <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
         {paginatedPokemons.map((pokemon) => (
           <Box key={pokemon.national_number} sx={{ m: 2 }}>
