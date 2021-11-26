@@ -5,5 +5,11 @@ export const theme = createTheme({
     primary: {
       main: "#E2350D",
     },
+    text: {
+      primary: "#333333",
+    },
+  },
+  typography: {
+    fontFamily: "Titillium Web",
   },
 });
