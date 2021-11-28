@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 // Material ui
 import { Box, Grid, Pagination } from "@mui/material";
 // Components
@@ -7,6 +7,7 @@ import { PokemonCard } from "./PokemonCard";
 import { usePokemons } from "hooks/usePokemons";
 import { SearchInput } from "SearchInput";
 import { FilterByTypeList } from "./FilterByTypeList";
+import { FilterByFavorites } from "./FilterByFavorites";
 
 const maxPokemonsPerPage = 10;
 
@@ -17,15 +18,26 @@ export const ListPokemons: React.FC = () => {
   // States
   const [search, setSearch] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [isFavoriteFilterChecked, setIsFavoriteFilterChecked] = useState(false);
   const [favoritePokemons, setFavoritePokemons] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Memoized values
-  const pokemonsFilteredByType = useMemo(() => {
-    if (selectedTypes.length === 0) return pokemons;
+  const favoritePokemonsMemoized = useMemo(() => {
+    if (!isFavoriteFilterChecked) return pokemons;
 
-    return pokemons.filter((pokemon) => selectedTypes.every((type) => pokemon.type.includes(type)));
-  }, [pokemons, selectedTypes]);
+    if (!favoritePokemons.length) return [];
+
+    return pokemons.filter((pokemon) => favoritePokemons.includes(pokemon.national_number));
+  }, [isFavoriteFilterChecked, pokemons, favoritePokemons]);
+
+  const pokemonsFilteredByType = useMemo(() => {
+    if (selectedTypes.length === 0) return favoritePokemonsMemoized;
+
+    return favoritePokemonsMemoized.filter((pokemon) =>
+      selectedTypes.every((type) => pokemon.type.includes(type))
+    );
+  }, [favoritePokemonsMemoized, selectedTypes]);
 
   const pokemonsFilteredBySearch = useMemo(() => {
     const regex = new RegExp(search, "i");
@@ -40,6 +52,8 @@ export const ListPokemons: React.FC = () => {
       (currentPage - 1) * maxPokemonsPerPage + maxPokemonsPerPage
     );
   }, [pokemonsFilteredBySearch, currentPage]);
+
+  useEffect(() => setCurrentPage(1), [pokemonsFilteredBySearch]);
 
   const toggleFavorite = (id: string) => {
     const index = favoritePokemons.indexOf(id);
@@ -67,6 +81,11 @@ export const ListPokemons: React.FC = () => {
           <FilterByTypeList
             selectedTypes={selectedTypes}
             onChange={(newSelectedTypes) => setSelectedTypes(newSelectedTypes)}
+          />
+
+          <FilterByFavorites
+            value={isFavoriteFilterChecked}
+            onChange={() => setIsFavoriteFilterChecked((prev) => !prev)}
           />
         </Grid>
 
