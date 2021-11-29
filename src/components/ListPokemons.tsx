@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 // Material ui
-import { Box, Grid, Pagination } from "@mui/material";
+import { Box, Grid, Pagination, Typography } from "@mui/material";
 // Components
 import { PokemonCard } from "./PokemonCard";
 import { SearchInput } from "SearchInput";
@@ -118,16 +118,29 @@ export const ListPokemons: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} sm={9}>
-          <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
-            {pokemonsPerPage.map((pokemon) => (
-              <Box key={pokemon.national_number} sx={{ m: 2 }}>
-                <PokemonCard
-                  pokemon={pokemon}
-                  isFavorite={favoritePokemons.includes(pokemon.national_number)}
-                  onClick={() => toggleFavorite(pokemon.national_number)}
-                />
-              </Box>
-            ))}
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            {pokemonsPerPage.length ? (
+              pokemonsPerPage.map((pokemon) => (
+                <Box key={pokemon.national_number} sx={{ m: 2 }}>
+                  <PokemonCard
+                    pokemon={pokemon}
+                    isFavorite={favoritePokemons.includes(pokemon.national_number)}
+                    onClick={() => toggleFavorite(pokemon.national_number)}
+                  />
+                </Box>
+              ))
+            ) : (
+              <Typography variant="h4" sx={{ my: "auto" }}>
+                Nenhum pokemon foi encontrado
+              </Typography>
+            )}
           </Box>
         </Grid>
       </Grid>
