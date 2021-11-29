@@ -9,19 +9,20 @@ import { FilterByFavorites } from "./FilterByFavorites";
 import { OrderByValue, SelectOrderBy } from "./SelectOrderBy";
 // Utils
 import { usePokemons } from "hooks/usePokemons";
+import { useLocalStorage } from "hooks/useLocalStorage";
 
 const maxPokemonsPerPage = 10;
 
 export const ListPokemons: React.FC = () => {
   // Hooks
   const { pokemons } = usePokemons();
+  const [favoritePokemons, setFavoritePokemons] = useLocalStorage<string[]>("favoritePokemons", []);
 
   // States
   const [search, setSearch] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [orderBy, setOrderBy] = useState<OrderByValue>("national_number:asc");
   const [isFavoriteFilterChecked, setIsFavoriteFilterChecked] = useState(false);
-  const [favoritePokemons, setFavoritePokemons] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Memoized values
@@ -53,7 +54,6 @@ export const ListPokemons: React.FC = () => {
 
   // Order pokemons
   const pokemonsOrdered = useMemo(() => {
-    console.log("order pokemons");
     const [field, order] = orderBy.split(":") as ["national_number" | "name", "asc" | "desc"];
 
     const pokemonsOrdered = pokemonsFilteredBySearch.sort((a, b) => {
