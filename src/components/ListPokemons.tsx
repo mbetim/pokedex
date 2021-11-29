@@ -3,11 +3,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Box, Grid, Pagination } from "@mui/material";
 // Components
 import { PokemonCard } from "./PokemonCard";
-// Utils
-import { usePokemons } from "hooks/usePokemons";
 import { SearchInput } from "SearchInput";
 import { FilterByTypeList } from "./FilterByTypeList";
 import { FilterByFavorites } from "./FilterByFavorites";
+import { OrderByValue, SelectOrderBy } from "./SelectOrderBy";
+// Utils
+import { usePokemons } from "hooks/usePokemons";
 
 const maxPokemonsPerPage = 10;
 
@@ -18,11 +19,13 @@ export const ListPokemons: React.FC = () => {
   // States
   const [search, setSearch] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [orderBy, setOrderBy] = useState<OrderByValue>("national_number:asc");
   const [isFavoriteFilterChecked, setIsFavoriteFilterChecked] = useState(false);
   const [favoritePokemons, setFavoritePokemons] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Memoized values
+  // Filter favorite pokemons
   const favoritePokemonsMemoized = useMemo(() => {
     if (!isFavoriteFilterChecked) return pokemons;
 
@@ -31,6 +34,7 @@ export const ListPokemons: React.FC = () => {
     return pokemons.filter((pokemon) => favoritePokemons.includes(pokemon.national_number));
   }, [isFavoriteFilterChecked, pokemons, favoritePokemons]);
 
+  // Filter pokemons by types
   const pokemonsFilteredByType = useMemo(() => {
     if (selectedTypes.length === 0) return favoritePokemonsMemoized;
 
@@ -39,6 +43,7 @@ export const ListPokemons: React.FC = () => {
     );
   }, [favoritePokemonsMemoized, selectedTypes]);
 
+  // Filter pokemons by text search
   const pokemonsFilteredBySearch = useMemo(() => {
     const regex = new RegExp(search, "i");
     return pokemonsFilteredByType.filter(
@@ -46,12 +51,31 @@ export const ListPokemons: React.FC = () => {
     );
   }, [search, pokemonsFilteredByType]);
 
-  const paginatedPokemons = useMemo(() => {
-    return pokemonsFilteredBySearch.slice(
-      (currentPage - 1) * maxPokemonsPerPage,
-      (currentPage - 1) * maxPokemonsPerPage + maxPokemonsPerPage
-    );
-  }, [pokemonsFilteredBySearch, currentPage]);
+  // Order pokemons
+  const pokemonsOrdered = useMemo(() => {
+    console.log("order pokemons");
+    const [field, order] = orderBy.split(":") as ["national_number" | "name", "asc" | "desc"];
+
+    const pokemonsOrdered = pokemonsFilteredBySearch.sort((a, b) => {
+      if (order === "asc") {
+        return a[field] > b[field] ? 1 : -1;
+      } else {
+        return a[field] < b[field] ? 1 : -1;
+      }
+    });
+
+    return [...pokemonsOrdered];
+  }, [orderBy, pokemonsFilteredBySearch]);
+
+  // Pagination
+  const pokemonsPerPage = useMemo(
+    () =>
+      pokemonsOrdered.slice(
+        (currentPage - 1) * maxPokemonsPerPage,
+        currentPage * maxPokemonsPerPage
+      ),
+    [currentPage, pokemonsOrdered]
+  );
 
   useEffect(() => setCurrentPage(1), [pokemonsFilteredBySearch]);
 
@@ -70,9 +94,13 @@ export const ListPokemons: React.FC = () => {
 
   return (
     <div>
-      <Grid container sx={{ mb: 2 }}>
+      <Grid container spacing={1} alignItems="center" sx={{ mb: 2 }}>
         <Grid item xs={12} sm={6}>
           <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <SelectOrderBy value={orderBy} onChange={(newOrderValue) => setOrderBy(newOrderValue)} />
         </Grid>
       </Grid>
 
@@ -91,7 +119,7 @@ export const ListPokemons: React.FC = () => {
 
         <Grid item xs={12} sm={9}>
           <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
-            {paginatedPokemons.map((pokemon) => (
+            {pokemonsPerPage.map((pokemon) => (
               <Box key={pokemon.national_number} sx={{ m: 2 }}>
                 <PokemonCard
                   pokemon={pokemon}
